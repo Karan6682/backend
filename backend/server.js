@@ -8,15 +8,21 @@ const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
+// Allow configuring frontend origin via env so deployed frontend can connect
+const FRONTEND_URL = process.env.FRONTEND_URL || '*';
+
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"]
+    origin: FRONTEND_URL === '*' ? '*' : FRONTEND_URL,
+    methods: ['GET', 'POST']
   }
 });
 
-// Middleware
-app.use(cors());
+// Middleware - configure CORS for Express as well
+app.use(cors({
+  origin: FRONTEND_URL === '*' ? true : FRONTEND_URL,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+}));
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 app.use("/public", express.static(path.join(__dirname, "public")));
