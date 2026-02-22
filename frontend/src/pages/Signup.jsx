@@ -14,7 +14,7 @@ const Signup = ({ setUser }) => {
         setLoading(true);
         setError('');
         try {
-            const res = await axios.post('/api/auth/signup', formData);
+            const res = await axios.post('http://localhost:5000/api/auth/signup', formData);
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
             setUser(res.data.user);
@@ -91,6 +91,18 @@ const Signup = ({ setUser }) => {
                         {loading ? 'Creating account...' : 'Create Account'} <ArrowRight size={20} />
                     </button>
                 </form>
+
+                {/* Demo preview button: open dashboard in a new tab with demo data */}
+                <div style={{ marginTop: '14px' }}>
+                    <button
+                        type="button"
+                        className="btn-outline"
+                        style={{ width: '100%', padding: '12px', borderRadius: '8px', cursor: 'pointer' }}
+                        onClick={() => window.open('/dashboard?demo=true', '_blank')}
+                    >
+                        Preview Demo Dashboard
+                    </button>
+                </div>
 
                 <p style={{ marginTop: '25px', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>
                     Already have an account? <Link to="/login" style={{ color: '#25d366', textDecoration: 'none', fontWeight: '600' }}>Log in</Link>

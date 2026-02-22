@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { CheckCircle, Clock, AlertCircle, Plus, Globe } from 'lucide-react';
 
 const Dashboard = () => {
@@ -11,38 +11,58 @@ const Dashboard = () => {
     const [selectedCampaign, setSelectedCampaign] = useState(null);
     const [wallet, setWallet] = useState({ balance: 0, perMessageCost: 0.50 });
     const token = localStorage.getItem('token');
+    const location = useLocation();
+    const params = new URLSearchParams(location.search);
+    const isDemo = params.get('demo') === 'true';
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Fetch Meta Status
-                const metaRes = await axios.get('/api/client/meta', {
-                    headers: { 'x-auth-token': token }
-                });
-                setMetaInfo(metaRes.data);
+        // If demo mode is active (from ?demo=true), populate demo data and skip API calls
+        if (isDemo) {
+            setMetaInfo({ isVerified: true, phoneNumber: '+91 98765 43210' });
+            setUserProfile({ name: 'Demo User', company: 'Demo Corp', businessProfile: { logo: 'https://via.placeholder.com/80' } });
+            setCampaigns([
+                {
+                    _id: 'demo-1', name: 'Welcome Campaign', templateName: 'Welcome Template', totalContacts: 1200,
+                    sentCount: 1180, deliveredCount: 1150, failedCount: 30, status: 'completed', createdAt: new Date().toISOString(), logs: []
+                },
+                {
+                    _id: 'demo-2', name: 'Promo Blast', templateName: 'Promo Template', totalContacts: 5000,
+                    sentCount: 4500, deliveredCount: 4300, failedCount: 200, status: 'running', createdAt: new Date().toISOString(), logs: []
+                }
+            ]);
+            setWallet({ balance: 499.00, perMessageCost: 0.50 });
+        } else {
+            const fetchData = async () => {
+                try {
+                    // Fetch Meta Status
+                    const metaRes = await axios.get('http://localhost:5000/api/client/meta', {
+                        headers: { 'x-auth-token': token }
+                    });
+                    setMetaInfo(metaRes.data);
 
-                // Fetch Full Profile (Company Info)
-                const profileRes = await axios.get('/api/profile', {
-                    headers: { 'x-auth-token': token }
-                });
-                setUserProfile(profileRes.data);
+                    // Fetch Full Profile (Company Info)
+                    const profileRes = await axios.get('http://localhost:5000/api/profile', {
+                        headers: { 'x-auth-token': token }
+                    });
+                    setUserProfile(profileRes.data);
 
-                const campaignRes = await axios.get('/api/campaign/list', {
-                    headers: { 'x-auth-token': token }
-                });
-                setCampaigns(campaignRes.data);
+                    const campaignRes = await axios.get('http://localhost:5000/api/campaign/list', {
+                        headers: { 'x-auth-token': token }
+                    });
+                    setCampaigns(campaignRes.data);
 
-                // Fetch Wallet Balance
-                const walletRes = await axios.get('/api/wallet/balance', {
-                    headers: { 'x-auth-token': token }
-                });
-                setWallet(walletRes.data);
-            } catch (err) {
-                console.error(err);
-            }
-        };
+                    // Fetch Wallet Balance
+                    const walletRes = await axios.get('http://localhost:5000/api/wallet/balance', {
+                        headers: { 'x-auth-token': token }
+                    });
+                    setWallet(walletRes.data);
+                } catch (err) {
+                    console.error(err);
+                }
+            };
 
-        fetchData();
+            fetchData();
+        }
 
         // Auto refresh if a campaign is running
         const interval = setInterval(() => {
