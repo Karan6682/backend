@@ -65,8 +65,9 @@ router.post("/upload-logo", [auth, upload.single("logo")], async (req, res) => {
         const user = await User.findById(req.user.id);
         if (!user) return res.status(404).json({ msg: "User not found" });
 
-        // URL construction (Assuming server serves /uploads)
-        const logoUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+    // URL construction (use configured BACKEND_URL or derive from request)
+    const baseUrl = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
+    const logoUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
         if (!user.businessProfile) user.businessProfile = {};
         user.businessProfile.logo = logoUrl;
